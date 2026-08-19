@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Monitoring Portofolio PMO 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#f4f6f9; --card:#ffffff; --border:#e3e7ee; --text:#1c2733; --text-sub:#5b6b7c; --text-muted:#8b98a6;
+    --blue:#2a6fdb; --blue-bg:#e8f0fd;
+    --green:#1a9e6a; --green-bg:#e6f7ef;
+    --amber:#c98500; --amber-bg:#fdf2df;
+    --red:#d13b3b; --red-bg:#fdeaea;
+    --gray:#6b7684; --gray-bg:#eef1f4;
+    --purple:#6c4fd6; --purple-bg:#f0ecfc;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);}
+  .wrap{max-width:1440px;margin:0 auto;padding:28px 32px 60px;}
+  header.top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px;}
+  header.top h1{font-size:26px;margin:0 0 6px;font-weight:700;color:#0f1e30;}
+  header.top p{margin:0;color:var(--text-sub);font-size:14px;}
+  .refresh-badge{background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-size:13px;color:var(--text-sub);display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;}
+
+  .filters{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:22px;}
+  .filter-group{display:flex;flex-direction:column;gap:6px;min-width:220px;}
+  .filter-group label{font-size:12px;font-weight:600;color:var(--text-sub);text-transform:uppercase;letter-spacing:.03em;}
+  .filter-group select, .filter-group input{padding:9px 12px;border-radius:8px;border:1px solid var(--border);font-size:14px;background:#fff;color:var(--text);}
+  .filter-group input{min-width:220px;}
+  .btn-reset{padding:9px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text-sub);font-size:14px;cursor:pointer;}
+  .btn-reset:hover{background:var(--gray-bg);}
+  .filter-count{font-size:13px;color:var(--text-muted);margin-left:auto;align-self:center;}
+
+  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px;}
+  .kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;}
+  .kpi-card .label{font-size:13px;color:var(--text-sub);margin-bottom:8px;font-weight:600;}
+  .kpi-card .value{font-size:34px;font-weight:700;line-height:1;}
+  .kpi-card .sub{font-size:12px;color:var(--text-muted);margin-top:8px;}
+  .kpi-card .bar-track{height:5px;border-radius:4px;background:var(--gray-bg);margin-top:12px;overflow:hidden;}
+  .kpi-card .bar-fill{height:100%;border-radius:4px;}
+  .kpi-total .value{color:#0f1e30;}
+  .kpi-complete .value{color:var(--green);}
+  .kpi-complete .bar-fill{background:var(--green);}
+  .kpi-ontrack .value{color:var(--blue);}
+  .kpi-ontrack .bar-fill{background:var(--blue);}
+  .kpi-risk .value{color:var(--red);}
+  .kpi-risk .bar-fill{background:var(--red);}
+  .kpi-hold .value{color:var(--amber);}
+  .kpi-hold .bar-fill{background:var(--amber);}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:24px;}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+  .panel h2{font-size:16px;margin:0 0 14px;font-weight:700;color:#0f1e30;}
+  .panel h2 .count-badge{font-size:12px;font-weight:600;color:var(--text-muted);margin-left:8px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);border-bottom:1px solid var(--border);padding:8px 10px;font-weight:700;cursor:pointer;user-select:none;white-space:nowrap;}
+  th:hover{color:var(--text);}
+  td{padding:9px 10px;border-bottom:1px solid #f0f2f5;vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#fafbfd;}
+
+  .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;white-space:nowrap;}
+  .badge-green{background:var(--green-bg);color:var(--green);}
+  .badge-blue{background:var(--blue-bg);color:var(--blue);}
+  .badge-red{background:var(--red-bg);color:var(--red);}
+  .badge-amber{background:var(--amber-bg);color:var(--amber);}
+  .badge-gray{background:var(--gray-bg);color:var(--gray);}
+  .badge-purple{background:var(--purple-bg);color:var(--purple);}
+
+  .stack-bar{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--gray-bg);width:100%;min-width:80px;}
+  .stack-seg-ok{background:var(--green);}
+  .stack-seg-stale{background:var(--red);}
+
+  .section-title{font-size:19px;font-weight:700;margin:34px 0 14px;color:#0f1e30;display:flex;align-items:center;gap:10px;}
+  .section-title .tag{font-size:12px;font-weight:600;background:var(--gray-bg);color:var(--text-sub);padding:3px 10px;border-radius:999px;}
+
+  .alerts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+  .alert-panel h3{font-size:14.5px;margin:0 0 4px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .alert-panel p.desc{font-size:12.5px;color:var(--text-muted);margin:0 0 12px;}
+  .empty-state{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
+  .scroll-box{max-height:320px;overflow-y:auto;}
+
+  .full-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:8px;}
+  .full-table-scroll{max-height:560px;overflow-y:auto;}
+  .full-table-scroll thead th{position:sticky;top:0;background:#fff;z-index:2;}
+
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text-muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  footer a{color:var(--blue);text-decoration:none;}
+
+  .name-cell{max-width:340px;}
+  .name-main{font-weight:600;color:#182634;}
+  .name-sub{font-size:11.5px;color:var(--text-muted);margin-top:2px;}
+
+  @media (max-width:1180px){
+    .kpi-grid{grid-template-columns:repeat(3,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+    .alerts-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:680px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Dashboard monitoring portofolio PMO 2026</h1>
+      <p>Laporan berkala manajemen &amp; reminder PM &bull; data ditarik langsung dari Asana Portfolio PMO 2026</p>
+    </div>
+    <div class="refresh-badge"><span class="dot"></span> Data per <span id="gen-date">-</span></div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>Jenis pengembangan TI</label>
+      <select id="filter-jenis"><option value="">Semua jenis</option></select>
+    </div>
+    <div class="filter-group">
+      <label>PIC / project owner</label>
+      <select id="filter-owner"><option value="">Semua PIC</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Cari nama proyek</label>
+      <input type="text" id="filter-search" placeholder="Ketik nama proyek...">
+    </div>
+    <button class="btn-reset" id="btn-reset">Reset filter</button>
+    <div class="filter-count" id="filter-count"></div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-total">
+      <div class="label">Total proyek</div>
+      <div class="value" id="kpi-total">0</div>
+      <div class="sub">seluruh proyek dalam portofolio</div>
+    </div>
+    <div class="kpi-card kpi-complete">
+      <div class="label">Selesai (complete)</div>
+      <div class="value" id="kpi-complete">0</div>
+      <div class="sub" id="kpi-complete-pct">0% dari total</div>
+      <div class="bar-track"><div class="bar-fill" id="kpi-complete-bar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card kpi-ontrack">
+      <div class="label">On track</div>
+      <div class="value" id="kpi-ontrack">0</div>
+      <div class="sub" id="kpi-ontrack-pct">0% dari total</div>
+      <div class="bar-track"><div class="bar-fill" id="kpi-ontrack-bar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card kpi-risk">
+      <div class="label">Bermasalah (at risk / off track)</div>
+      <div class="value" id="kpi-risk">0</div>
+      <div class="sub" id="kpi-risk-pct">0% dari total</div>
+      <div class="bar-track"><div class="bar-fill" id="kpi-risk-bar" style="width:0%"></div></div>
+    </div>
+    <div class="kpi-card kpi-hold">
+      <div class="label">On hold</div>
+      <div class="value" id="kpi-hold">0</div>
+      <div class="sub" id="kpi-hold-pct">0% dari total</div>
+      <div class="bar-track"><div class="bar-fill" id="kpi-hold-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <h2>Distribusi proyek per jenis pengembangan TI<span class="count-badge">berdasarkan status</span></h2>
+      <div style="position:relative;height:280px;">
+        <canvas id="chartJenis" role="img" aria-label="Bar chart jumlah proyek per jenis pengembangan TI, dipecah per status">Grafik jumlah proyek per jenis pengembangan TI.</canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Komposisi status proyek</h2>
+      <div style="position:relative;height:280px;">
+        <canvas id="chartStatus" role="img" aria-label="Donut chart komposisi status proyek: complete, on track, at risk, off track, on hold">Grafik komposisi status proyek.</canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Rekap PIC dengan proyek on track <span class="tag" id="owner-recap-count">0 PIC</span></div>
+  <div class="panel">
+    <div class="scroll-box">
+      <table id="owner-table">
+        <thead>
+          <tr>
+            <th data-key="owner">PIC / Project owner</th>
+            <th data-key="total">Total on track</th>
+            <th data-key="ok">Sudah update (&le;3 hari)</th>
+            <th data-key="stale">Perlu update (&gt;3 hari)</th>
+            <th>Progres update</th>
+          </tr>
+        </thead>
+        <tbody id="owner-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-title">Perhatian manajemen &amp; reminder PM</div>
+  <div class="alerts-grid">
+    <div class="panel alert-panel">
+      <h3><span class="badge badge-red">&#9888;</span> Proyek bermasalah (at risk / off track)</h3>
+      <p class="desc">Perlu eskalasi dan tindak lanjut segera dari PIC terkait.</p>
+      <div class="scroll-box" id="list-risk"></div>
+    </div>
+    <div class="panel alert-panel">
+      <h3><span class="badge badge-amber">&#9208;</span> Proyek on hold</h3>
+      <p class="desc">Tertahan / menunggu keputusan, berpotensi menghambat target portofolio.</p>
+      <div class="scroll-box" id="list-hold"></div>
+    </div>
+    <div class="panel alert-panel">
+      <h3><span class="badge badge-blue">&#128276;</span> Reminder PM: status belum update &gt;3 hari</h3>
+      <p class="desc">Proyek on track namun status terakhir sudah lebih dari 3 hari, mohon segera diperbarui di Asana.</p>
+      <div class="scroll-box" id="list-stale"></div>
+    </div>
+    <div class="panel alert-panel">
+      <h3><span class="badge badge-purple">&#128197;</span> Proyek lewat tenggat, belum selesai</h3>
+      <p class="desc">Due date sudah terlewati namun status belum complete, perlu klarifikasi tenggat baru.</p>
+      <div class="scroll-box" id="list-overdue"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Daftar lengkap proyek <span class="tag" id="full-table-count">0 proyek</span></div>
+  <div class="full-table-wrap">
+    <div class="full-table-scroll">
+      <table id="full-table">
+        <thead>
+          <tr>
+            <th data-key="name">Nama proyek</th>
+            <th data-key="jenis_ti">Jenis TI</th>
+            <th data-key="owner">PIC</th>
+            <th data-key="status">Status</th>
+            <th data-key="due_on">Tenggat</th>
+            <th data-key="days_since_update">Update terakhir</th>
+          </tr>
+        </thead>
+        <tbody id="full-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    <span>Sumber data: <a href="https://app.asana.com/0/portfolio/1213893166159937/list" target="_blank" rel="noopener">Asana &mdash; Portofolio PMO 2026</a>. Ambang "perlu update" = status terakhir &gt;3 hari. "Lewat tenggat" = due date terlampaui &amp; status belum complete.</span>
+    <span id="footer-gen"></span>
+  </footer>
+
+</div>
+
+<script>
+const RAW_DATA = [{"name": "Pengadaan Jasa Pengembangan Solusi Data Modelling Dan Reporting Terintegrasi Kluster Pelayanan ", "owner": "Yohanes Desman Sitinjak", "status": "on_track", "status_date": "2026-08-15T18:09:12.056Z", "due_on": null, "modified_at": "2026-08-15T18:05:47.238Z", "jenis_ti": "Tidak Dikategorikan", "sdlc": null, "cluster": null, "days_since_update": 3, "overdue_days": null, "is_stale": false, "is_overdue": false}, {"name": "Pengadaaan Jasa Konsultan Perdir TKDI", "owner": "Arif Asridin", "status": "on_track", "status_date": "2026-08-07T06:23:22.490Z", "due_on": null, "modified_at": "2026-08-07T06:20:51.994Z", "jenis_ti": "Tidak Dikategorikan", "sdlc": null, "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Penyesuaian Hak Akses User Faskes pada Aplikasi JKN Drive", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-06-04T03:14:53.622Z", "due_on": null, "modified_at": "2026-08-12T06:51:12.475Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Pelayanan", "days_since_update": 75, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Penyesuaian Pengajuan Klaim KK PAK", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-05-21T09:33:37.004Z", "due_on": null, "modified_at": "2026-08-12T06:51:29.293Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Pelayanan", "days_since_update": 89, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Uji Coba terkait Penyesuaian Pengambilan Rujukan", "owner": "Yoga Febriansyah", "status": "on_track", "status_date": "2026-07-31T04:45:25.425Z", "due_on": "2026-07-31", "modified_at": "2026-08-12T06:51:34.127Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Pelayanan", "days_since_update": 18, "overdue_days": 19, "is_stale": true, "is_overdue": true}, {"name": "Penyesuaian Pencatatan Pelayanan Kesehatan Tindaklanjut Skrining Kesehatan", "owner": "Hendra Eko Prayogo", "status": "on_track", "status_date": "2026-07-31T04:45:14.316Z", "due_on": "2026-07-31", "modified_at": "2026-08-12T06:51:40.744Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 18, "overdue_days": 19, "is_stale": true, "is_overdue": true}, {"name": "Penyesuaian Alur Customer Journey Rawat Inap", "owner": "Ikhsan", "status": "on_hold", "status_date": "2026-06-09T07:01:32.687Z", "due_on": "2026-06-26", "modified_at": "2026-08-12T06:51:44.986Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Pelayanan", "days_since_update": 70, "overdue_days": 54, "is_stale": true, "is_overdue": true}, {"name": "Verifikasi Pasca Klaim", "owner": "Hendra Eko Prayogo", "status": "on_track", "status_date": "2026-08-03T23:14:15.968Z", "due_on": "2026-07-31", "modified_at": "2026-08-12T06:51:49.153Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 15, "overdue_days": 19, "is_stale": true, "is_overdue": true}, {"name": "Pengembangan Kontak Dokter Peserta di Mobile JKN Faskes", "owner": "Fajar", "status": "on_track", "status_date": "2026-07-29T06:09:11.803Z", "due_on": "2026-07-31", "modified_at": "2026-08-17T11:22:17.840Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Mobile", "days_since_update": 20, "overdue_days": 19, "is_stale": true, "is_overdue": true}, {"name": "Penyempurnaan Aplikasi HFIS Seleksi Kerja Sama dan Perjanjian Kerja Sama Faskes", "owner": "Ardhy Widhiantoro", "status": "on_track", "status_date": "2026-08-13T04:10:43.299Z", "due_on": "2026-10-01", "modified_at": "2026-08-13T04:10:29.897Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Pelayanan", "days_since_update": 5, "overdue_days": -43, "is_stale": true, "is_overdue": false}, {"name": "HFIS - Penyesuaian Logic User Responden dan Penambahan Waktu Pelaksanaan Survei", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-07-10T09:26:00.363Z", "due_on": "2026-06-26", "modified_at": "2026-08-12T06:52:11.313Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Pelayanan", "days_since_update": 39, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Penyesuaian Fitur Terkait Kendali Rate Rujukan", "owner": "Anand K.", "status": "on_track", "status_date": "2026-08-14T04:28:08.959Z", "due_on": "2026-09-30", "modified_at": "2026-08-14T08:06:25.670Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": -42, "is_stale": true, "is_overdue": false}, {"name": "Penambahan Fitur Post Klaim (VPK dan AAK)", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-07-02T02:24:18.373Z", "due_on": "2026-07-01", "modified_at": "2026-08-13T10:52:03.933Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Pelayanan", "days_since_update": 47, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Validasi Biometrik di Faskes (Priority 2)", "owner": "I Made Karistiawan", "status": "on_track", "status_date": "2026-08-14T07:52:18.690Z", "due_on": "2026-09-16", "modified_at": "2026-08-14T07:52:14.241Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": -28, "is_stale": true, "is_overdue": false}, {"name": "Fitur Claim Triage (Priority 2)", "owner": "I Made Karistiawan", "status": "on_track", "status_date": "2026-08-14T07:52:04.201Z", "due_on": "2026-09-30", "modified_at": "2026-08-14T07:52:00.221Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": -42, "is_stale": true, "is_overdue": false}, {"name": "Implementasi Viewer RME pada Aplikasi Vidi (Priority 1)", "owner": "Djaka Santosa", "status": "on_track", "status_date": "2026-08-14T07:43:32.115Z", "due_on": "2026-10-01", "modified_at": "2026-08-14T07:29:34.144Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": -43, "is_stale": true, "is_overdue": false}, {"name": "Rujukan Katarak pada FKTP (Priority 1)", "owner": "Agung Waluyo Utomo", "status": "on_track", "status_date": "2026-07-31T04:44:47.970Z", "due_on": "2026-07-31", "modified_at": "2026-08-12T06:52:37.625Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 18, "overdue_days": 19, "is_stale": true, "is_overdue": true}, {"name": "Penambahan Fitur ICM (Prioritas 1)", "owner": "Hendra Eko Prayogo", "status": "on_track", "status_date": "2026-07-31T04:44:00.705Z", "due_on": "2026-09-11", "modified_at": "2026-08-13T02:06:43.403Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Pelayanan", "days_since_update": 18, "overdue_days": -23, "is_stale": true, "is_overdue": false}, {"name": "Surat Kontrol (Priority 1)", "owner": "Ikhsan", "status": "on_track", "status_date": "2026-07-31T04:19:38.917Z", "due_on": "2026-09-01", "modified_at": "2026-08-12T06:52:48.820Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 18, "overdue_days": -13, "is_stale": true, "is_overdue": false}, {"name": "Pemanfaatan JKN Drive pada Aplikasi PCare EClaim", "owner": "I Made Karistiawan", "status": "on_hold", "status_date": "2026-08-14T07:51:47.049Z", "due_on": "2026-07-13", "modified_at": "2026-08-14T07:51:13.544Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": 37, "is_stale": true, "is_overdue": true}, {"name": "Integrasi Sistem Rujukan Berbasis Kompetensi Pelayanan (RBKP) dengan Rujukan PCare", "owner": "I Made Karistiawan", "status": "on_track", "status_date": "2026-08-14T07:50:59.731Z", "due_on": "2026-08-01", "modified_at": "2026-08-14T07:50:50.754Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": 18, "is_stale": true, "is_overdue": true}, {"name": "Ujicoba Penagihan Klaim IDRG", "owner": "I Made Karistiawan", "status": "on_track", "status_date": "2026-08-14T07:50:37.834Z", "due_on": "2026-08-31", "modified_at": "2026-08-14T07:50:18.467Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": -12, "is_stale": true, "is_overdue": false}, {"name": "Ujicoba Implementasi KRIS", "owner": "I Made Karistiawan", "status": "at_risk", "status_date": "2026-08-14T07:50:05.963Z", "due_on": "2026-08-01", "modified_at": "2026-08-14T07:49:17.078Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": 18, "is_stale": true, "is_overdue": true}, {"name": "Integrasi STR dan SIP", "owner": "Ardhy Widhiantoro", "status": "on_hold", "status_date": "2026-08-07T07:51:48.581Z", "due_on": null, "modified_at": "2026-08-12T06:53:12.979Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Penguatan Layanan Obat melalui Implementasi Fornas - SiRefo", "owner": "Anand K.", "status": "on_track", "status_date": "2026-08-14T04:27:55.123Z", "due_on": null, "modified_at": "2026-08-14T04:27:51.435Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Penambahan Fitur Tidak Layak pada Aplikasi VIDI", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-08-07T06:23:03.837Z", "due_on": null, "modified_at": "2026-08-12T06:53:21.698Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan aplikasi JKN Drive untuk proses upload dokumen pendukung klaim", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-08-07T06:22:56.304Z", "due_on": null, "modified_at": "2026-08-12T06:53:27.041Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Informasi Status per Task Antrean di Mobile JKN", "owner": "Muhammad Yazid Al Qahar", "status": "complete", "status_date": "2026-08-07T06:22:40.131Z", "due_on": null, "modified_at": "2026-08-12T06:53:31.496Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Detail Status Antrean Online FKTP dan FKTL", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-08-07T06:25:40.103Z", "due_on": null, "modified_at": "2026-08-12T06:53:35.906Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Inquiry Data, Pengawasan, Analisa Data Mandiri, Perencanaan, Perencanaan - Pengiriman SPPK/SPPL (Blast Email), Pelaksanaan dan Pelaporan, Otomasi SPHP, Pemantauan, Monitoring dan Evaluasi, Sanksi, Monev Penambahan Pendapatan, Monev Profile Temuan Pemeriksaan, Monitoring dan Evaluasi (User Kepwil), dan Setting", "owner": "Cecep Reza M. Yusup", "status": "on_track", "status_date": "2026-08-18T02:34:05.915Z", "due_on": "2026-08-14", "modified_at": "2026-08-18T02:33:55.095Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Kepesertaan", "days_since_update": 0, "overdue_days": 5, "is_stale": false, "is_overdue": true}, {"name": "Pengembangan Aplikasi AMAN (Anjungan Mandiri) JKN", "owner": "Djaka Santosa", "status": "on_track", "status_date": "2026-08-19T06:40:42.170Z", "due_on": "2026-09-22", "modified_at": "2026-08-19T06:39:34.721Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Back Office", "days_since_update": -1, "overdue_days": -34, "is_stale": false, "is_overdue": false}, {"name": "Customer Loyalty Point (CLP) CEMERLANG ", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-07-13T02:47:09.062Z", "due_on": "2026-08-06", "modified_at": "2026-08-12T06:44:46.037Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": null, "days_since_update": 36, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Script Reaktivasi dan Pengalihan Segmen Peserta menjadi PPU PN", "owner": "Yanuar Milad", "status": "complete", "status_date": "2026-08-04T09:42:49.253Z", "due_on": "2026-07-30", "modified_at": "2026-08-12T06:44:47.871Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Kepesertaan", "days_since_update": 14, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Informasi Penagihan PBPU Menunggak yang beralih segmen", "owner": "Wahyu Satriyo Wibowo", "status": "complete", "status_date": "2026-08-07T06:23:17.020Z", "due_on": null, "modified_at": "2026-08-12T06:44:49.791Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Matriks Mutasi Aplikasi Kepesertaan", "owner": "Yanuar Milad", "status": "on_hold", "status_date": "2026-08-04T09:46:35.946Z", "due_on": "2027-05-11", "modified_at": "2026-08-12T06:44:51.741Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Kepesertaan", "days_since_update": 14, "overdue_days": -265, "is_stale": true, "is_overdue": false}, {"name": "Business Requirement Penyesuaian Fitur Migrasi Data Faskes Non Aktif Pada Aplikasi Mig34", "owner": "Yanuar Milad", "status": "complete", "status_date": "2026-08-07T06:23:37.022Z", "due_on": null, "modified_at": "2026-08-12T06:44:53.602Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Perubahan regulasi pada Perpres 59 Tahun 2024 dan rancangan perubahan PerBPJS Nomor 06 Tahun 2018 (ITSC 2025 Staging 3)", "owner": "Yanuar Milad", "status": "complete", "status_date": "2026-08-07T06:23:30.309Z", "due_on": null, "modified_at": "2026-08-12T06:44:55.321Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Permohonan Script Pengalihan Segmen Peserta menjadi PPPK", "owner": "Yanuar Milad", "status": "complete", "status_date": "2026-08-07T06:25:21.740Z", "due_on": null, "modified_at": "2026-08-12T06:44:58.109Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Permohonan Perubahan UMP/UMK 2026 melalui Script Database", "owner": "Yanuar Milad", "status": "complete", "status_date": "2026-08-07T06:25:33.892Z", "due_on": null, "modified_at": "2026-08-12T06:45:04.054Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Perubahan Fungsi Pajak Aplikasi Petaku dan Fitur SKPD pada Aplikasi IHC", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-14T06:48:16.612Z", "due_on": "2026-04-22", "modified_at": "2026-08-14T06:48:08.792Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": 119, "is_stale": true, "is_overdue": true}, {"name": "Penyesuaian Sistem Aplikasi PETAKU (Penyempurnaan Fungsi Treasury dan Perpajakan)", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-14T06:48:02.338Z", "due_on": "2026-03-20", "modified_at": "2026-08-14T06:47:46.265Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": 152, "is_stale": true, "is_overdue": true}, {"name": "Perubahan Fungsi Pajak pada Petaku dan IHC", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-14T06:47:30.010Z", "due_on": "2026-09-29", "modified_at": "2026-08-14T06:45:43.183Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": -41, "is_stale": true, "is_overdue": false}, {"name": "SIMANIS - PESONA MOBILE - MODUL KADER JKN", "owner": "Wahyu Satriyo Wibowo", "status": "on_track", "status_date": "2026-08-14T06:44:19.163Z", "due_on": "2026-11-10", "modified_at": "2026-08-14T06:44:09.267Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": -83, "is_stale": true, "is_overdue": false}, {"name": "ARIP - Urgent - Script Inject NIK to NoKTP", "owner": "Wahyu Satriyo Wibowo", "status": "complete", "status_date": "2026-07-29T01:06:51.379Z", "due_on": "2026-07-31", "modified_at": "2026-08-12T06:53:57.988Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Keuangan/Iuran", "days_since_update": 20, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan REHAB 3 (Quick Win)", "owner": "Wahyu Satriyo Wibowo", "status": "complete", "status_date": "2026-06-09T08:51:51.851Z", "due_on": null, "modified_at": "2026-08-12T06:54:03.560Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Keuangan/Iuran", "days_since_update": 70, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Aplikasi Rekon FTP", "owner": "Cecep Reza M. Yusup", "status": "on_hold", "status_date": "2026-08-07T02:32:32.559Z", "due_on": "2026-08-18", "modified_at": "2026-08-12T06:54:08.170Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Keuangan/Iuran", "days_since_update": 11, "overdue_days": 1, "is_stale": true, "is_overdue": true}, {"name": "WS Cek Status Pembayaran", "owner": "Cecep Reza M. Yusup", "status": "on_hold", "status_date": "2026-08-07T02:31:01.888Z", "due_on": "2026-08-13", "modified_at": "2026-08-12T06:54:12.351Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Mobile", "days_since_update": 11, "overdue_days": 6, "is_stale": true, "is_overdue": true}, {"name": "Informasi Penagihan PBPU Menunggak yang beralih segmen", "owner": "Wahyu Satriyo Wibowo", "status": "complete", "status_date": "2026-08-07T06:23:23.899Z", "due_on": null, "modified_at": "2026-08-12T06:54:16.732Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Tutup Buku Laporan Keuangan Tahun 2025 dan Saldo Awal Tahun 2026", "owner": "Wahyu Satriyo Wibowo", "status": "complete", "status_date": "2026-08-07T06:25:27.667Z", "due_on": null, "modified_at": "2026-08-12T06:54:21.247Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem Informasi Pada Telemedicine Model 2", "owner": "I Made Karistiawan", "status": "on_track", "status_date": "2026-08-14T07:52:52.247Z", "due_on": "2026-11-01", "modified_at": "2026-08-14T07:52:39.700Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Pelayanan", "days_since_update": 4, "overdue_days": -74, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem Program SSI (Skema Sharing Iuran)", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-04T10:14:05.011Z", "due_on": "2026-08-21", "modified_at": "2026-08-12T06:54:30.686Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Kepesertaan", "days_since_update": 14, "overdue_days": -2, "is_stale": true, "is_overdue": false}, {"name": "E-Planning Tahap VI", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-08-07T06:25:52.810Z", "due_on": null, "modified_at": "2026-08-12T06:54:36.096Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "SIMBA", "owner": "Hantoro Dwi Prasetyo", "status": "on_track", "status_date": "2026-08-14T04:52:55.711Z", "due_on": "2026-10-13", "modified_at": "2026-08-14T04:52:30.123Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Middleware", "days_since_update": 4, "overdue_days": -55, "is_stale": true, "is_overdue": false}, {"name": "Hackaton Adinkes", "owner": "Septian F", "status": "complete", "status_date": "2026-05-08T03:37:46.515Z", "due_on": null, "modified_at": "2026-08-12T08:20:10.839Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Pelayanan", "days_since_update": 102, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "(Sprint 1) Perbaikan Pasca Deployment ", "owner": "Abi Dwiaji (Pro)", "status": "complete", "status_date": "2026-04-21T03:06:43.580Z", "due_on": "2026-04-24", "modified_at": "2026-08-12T08:20:13.530Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Mobile", "days_since_update": 119, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "(Sprint 2) Use Case Antrian & Monitoring Push Notification", "owner": "Abi Dwiaji (Pro)", "status": "complete", "status_date": "2026-04-30T05:33:32.655Z", "due_on": "2026-04-29", "modified_at": "2026-08-12T08:20:17.051Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Mobile", "days_since_update": 110, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "(Sprint 3) Improvement Push Notification System", "owner": "Abi Dwiaji (Pro)", "status": "complete", "status_date": "2026-05-19T04:37:29.651Z", "due_on": "2026-06-05", "modified_at": "2026-08-12T08:20:19.689Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Mobile", "days_since_update": 91, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Integrasi Mobile JKN dengan JRKU (Jasa Raharja)", "owner": "I Made Karistiawan", "status": "on_hold", "status_date": "2026-08-14T07:54:01.802Z", "due_on": null, "modified_at": "2026-08-14T07:53:52.656Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Mobile", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Skrining Jantung di Mobile JKN", "owner": "I Made Karistiawan", "status": "on_track", "status_date": "2026-08-14T07:53:33.134Z", "due_on": null, "modified_at": "2026-08-14T07:53:00.570Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Mobile", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "New Mobile JKN - Tahap 2 - UX Revamp", "owner": "Muhammad Yazid Al Qahar", "status": "on_track", "status_date": "2026-08-06T09:07:27.350Z", "due_on": "2026-08-31", "modified_at": "2026-08-16T08:15:07.951Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": null, "days_since_update": 12, "overdue_days": -12, "is_stale": true, "is_overdue": false}, {"name": "Healthkathon 2026 - (Landing page dan Pendaftaran)", "owner": "Adhan Ramadhan", "status": "complete", "status_date": "2026-08-19T06:36:48.274Z", "due_on": "2026-08-12", "modified_at": "2026-08-19T06:32:10.811Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Back Office", "days_since_update": -1, "overdue_days": null, "is_stale": false, "is_overdue": false}, {"name": "Integrasi ITSM dengan Asana", "owner": "Yanuar Milad", "status": "on_track", "status_date": "2026-08-14T04:46:03.279Z", "due_on": null, "modified_at": "2026-08-14T04:43:43.293Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Middleware", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Aplikasi Audit SMKI dan ISO", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-08-07T06:22:32.383Z", "due_on": null, "modified_at": "2026-08-12T08:06:19.073Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Console Kirim Data Klaim ke Blockchain", "owner": "Hendra Eko Prayogo", "status": "complete", "status_date": "2026-08-07T06:25:46.454Z", "due_on": null, "modified_at": "2026-08-12T08:20:33.296Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": null, "days_since_update": 11, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem Aplikasi New IMAPS", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-09T12:55:16.512Z", "due_on": "2026-08-03", "modified_at": "2026-08-12T06:44:08.696Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Back Office", "days_since_update": 9, "overdue_days": 16, "is_stale": true, "is_overdue": true}, {"name": "Pengembangan Sistem IHC (Modul Kepegawaian)", "owner": "Djaka Santosa", "status": "on_hold", "status_date": "2026-08-05T01:47:25.836Z", "due_on": "2026-08-21", "modified_at": "2026-08-14T06:25:12.235Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Back Office", "days_since_update": 13, "overdue_days": -2, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem IHC Bestamo (Absensi bagi Peserta Magang)", "owner": "Djaka Santosa", "status": "on_hold", "status_date": "2026-08-05T01:48:27.726Z", "due_on": "2026-09-11", "modified_at": "2026-08-12T06:44:14.197Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Back Office", "days_since_update": 13, "overdue_days": -23, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem IHC (Integrasi dengan ATS)", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-08-14T06:26:03.673Z", "due_on": "2026-08-07", "modified_at": "2026-08-14T06:25:26.395Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Back Office", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem IHC (Modul Perencanaan Kinerja)", "owner": "Ulfah Nur", "status": "on_track", "status_date": "2026-08-19T06:06:04.921Z", "due_on": "2026-07-24", "modified_at": "2026-08-19T06:03:40.525Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Back Office", "days_since_update": -1, "overdue_days": 26, "is_stale": false, "is_overdue": true}, {"name": "Pengembangan Sistem SmartCorpu (Web)", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-07-10T04:38:56.983Z", "due_on": "2026-03-27", "modified_at": "2026-08-12T06:44:22.821Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Mobile", "days_since_update": 39, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "IHC Bestamo - Fitur Smartcorpu Mobile", "owner": "Muhammad Yazid Al Qahar", "status": "at_risk", "status_date": "2026-08-06T09:10:13.259Z", "due_on": "2026-07-14", "modified_at": "2026-08-12T06:44:25.647Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Back Office", "days_since_update": 12, "overdue_days": 36, "is_stale": true, "is_overdue": true}, {"name": "IHC Modul Promosi IJP", "owner": "Djaka Santosa", "status": "on_track", "status_date": "2026-07-31T08:42:16.028Z", "due_on": "2026-09-03", "modified_at": "2026-08-12T06:44:29.261Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Back Office", "days_since_update": 18, "overdue_days": -15, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem Aplikasi Silpi", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-06-29T09:59:27.870Z", "due_on": null, "modified_at": "2026-08-12T06:44:31.881Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Back Office", "days_since_update": 50, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Penyesuaian aplikasi ABK", "owner": "Adhan Ramadhan", "status": "on_track", "status_date": "2026-08-03T09:27:46.767Z", "due_on": "2026-08-28", "modified_at": "2026-08-16T17:00:11.176Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Mobile", "days_since_update": 15, "overdue_days": -9, "is_stale": true, "is_overdue": false}, {"name": "M PRO- Improvement Rutin 2026", "owner": "Raga Mukti Al Haqqi", "status": "on_track", "status_date": "2026-08-14T06:10:29.354Z", "due_on": "2026-10-12", "modified_at": "2026-08-14T06:10:06.710Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Evaluasi UKPF", "cluster": "Back Office", "days_since_update": 4, "overdue_days": -54, "is_stale": true, "is_overdue": false}, {"name": "Drive Komsi", "owner": "Adhan Ramadhan", "status": "on_hold", "status_date": "2026-07-31T02:05:33.378Z", "due_on": "2026-08-28", "modified_at": "2026-08-18T12:24:44.552Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Evaluasi UKPF", "cluster": "Back Office", "days_since_update": 18, "overdue_days": -9, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Sistem Penjadwalan Agenda (JAGO)", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-14T04:31:06.966Z", "due_on": "2026-08-07", "modified_at": "2026-08-14T04:29:57.071Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Back Office", "days_since_update": 4, "overdue_days": 12, "is_stale": true, "is_overdue": true}, {"name": "HFIS - Survei Pemahaman Faskes - Penambahan Reset Buton dan Rekap Finalisasi", "owner": "Ardhy Widhiantoro", "status": "on_track", "status_date": "2026-08-13T04:08:22.249Z", "due_on": "2026-07-16", "modified_at": "2026-08-13T04:06:44.634Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 5, "overdue_days": 34, "is_stale": true, "is_overdue": true}, {"name": "Penyesuaian Sistem Aplikasi SIMANIS (Perpindahan BU)", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-14T07:25:28.127Z", "due_on": "2026-08-18", "modified_at": "2026-08-14T07:25:14.774Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": 1, "is_stale": true, "is_overdue": true}, {"name": "ARIP - Pembaharuan Parameter Billing TBS", "owner": "Wahyu Satriyo Wibowo", "status": "on_track", "status_date": "2026-08-14T06:54:59.274Z", "due_on": "2026-07-29", "modified_at": "2026-08-14T06:54:59.470Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": 21, "is_stale": true, "is_overdue": true}, {"name": "Pengembangan Sistem InvesGo dan Bestie (Invesment)", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-14T06:49:33.455Z", "due_on": "2026-05-18", "modified_at": "2026-08-14T06:48:48.412Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 4, "overdue_days": 93, "is_stale": true, "is_overdue": true}, {"name": "Penyesuaian Fitur ANC Aplikasi PCare", "owner": "Hendra Eko Prayogo", "status": "on_hold", "status_date": "2026-06-22T02:56:23.864Z", "due_on": "2026-06-26", "modified_at": "2026-08-12T06:55:38.567Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 57, "overdue_days": 54, "is_stale": true, "is_overdue": true}, {"name": "Pengembangan API Integrasi Data JKN dengan Portal INAku (Informasi Status Kepesertaan JKN)", "owner": "Septian F", "status": "complete", "status_date": "2026-08-14T04:48:53.719Z", "due_on": "2026-08-07", "modified_at": "2026-08-14T04:48:34.388Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Middleware", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Rekonsiliasi - Koreksi Iuran (Perbedaan rekon biasa dan PDTT, Pada menu rekon penambhaan menu rekon PDTT (hanya approve saja untuk kabag kepesertaan dan keuangan), Hasil setelah approval pengiriman ke Awasrik)", "owner": "Cecep Reza M. Yusup", "status": "on_track", "status_date": "2026-08-18T02:34:31.347Z", "due_on": "2026-08-14", "modified_at": "2026-08-18T02:34:21.077Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Kepesertaan", "days_since_update": 0, "overdue_days": 5, "is_stale": false, "is_overdue": true}, {"name": "Edabu - Penambahan layanan Informasi, Permintaan, dan Pengaduan Badan Usaha pada Aplikasi Edabu Badan Usaha", "owner": "Cecep Reza M. Yusup", "status": "on_hold", "status_date": "2026-06-29T09:48:52.750Z", "due_on": "2026-08-24", "modified_at": "2026-08-12T06:45:10.441Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Kepesertaan", "days_since_update": 50, "overdue_days": -5, "is_stale": true, "is_overdue": false}, {"name": "[Carry Over] - API EDABU BU - Penyesuaian API Integrasi Aplikasi eDabu BU dengan Aplikasi Kepegawaian BU", "owner": "I Made Wahyu Wirawan", "status": "on_track", "status_date": "2026-08-18T02:37:48.826Z", "due_on": "2025-10-30", "modified_at": "2026-08-18T02:37:38.771Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Middleware", "days_since_update": 0, "overdue_days": 293, "is_stale": false, "is_overdue": true}, {"name": "SENADA - Penyediaan Fitur Upload File Tindaklanjut Kategori Permintaan dan Pengaduan, Penyesuaian notifikasi email berisi tanggapan petugas, Informasi alur layanan Pengaduan SIPP Website​", "owner": "Cecep Reza M. Yusup", "status": "on_hold", "status_date": "2026-07-15T09:57:47.383Z", "due_on": "2026-07-03", "modified_at": "2026-08-12T06:45:15.354Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Back Office", "days_since_update": 34, "overdue_days": 47, "is_stale": true, "is_overdue": true}, {"name": "Arsip Dewas", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-07-07T07:04:12.106Z", "due_on": null, "modified_at": "2026-08-12T06:44:05.731Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Back Office", "days_since_update": 42, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan Mobile JKN Fitur Autodebit BNI", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-09T12:58:38.313Z", "due_on": "2026-08-14", "modified_at": "2026-08-17T07:32:33.220Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Keuangan/Iuran", "days_since_update": 9, "overdue_days": 5, "is_stale": true, "is_overdue": true}, {"name": "Penghapusan Tunggakan Iuran", "owner": "Wahyu Satriyo Wibowo", "status": "on_hold", "status_date": "2026-07-29T01:08:03.072Z", "due_on": "2026-06-12", "modified_at": "2026-08-12T08:20:37.679Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Evaluasi UKPF", "cluster": "Keuangan/Iuran", "days_since_update": 20, "overdue_days": 68, "is_stale": true, "is_overdue": true}, {"name": "New Mobile JKN - Tahap 1 - UI Revamp", "owner": "Muhammad Yazid Al Qahar", "status": "complete", "status_date": "2026-08-06T09:08:59.626Z", "due_on": "2026-07-15", "modified_at": "2026-08-12T08:20:39.885Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Mobile", "days_since_update": 12, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "INA AI - Mobile JKN", "owner": "Muhammad Yazid Al Qahar", "status": "complete", "status_date": "2026-07-03T01:28:48.952Z", "due_on": "2026-07-06", "modified_at": "2026-08-12T08:20:42.147Z", "jenis_ti": "Project AI dan RPA", "sdlc": "Rilis", "cluster": "Mobile", "days_since_update": 46, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengadaan Hitachi Cyber Resilience", "owner": "BagusK", "status": "on_track", "status_date": "2026-08-13T01:20:54.085Z", "due_on": null, "modified_at": "2026-08-13T01:20:09.603Z", "jenis_ti": "Pengadaan TI", "sdlc": null, "cluster": null, "days_since_update": 5, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Customer Loyalty Program", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-07-17T08:12:38.265Z", "due_on": null, "modified_at": "2026-08-12T06:45:17.683Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 32, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "REHAB - QW  2026 IURAN KUAT", "owner": "Indra Saputra Wardhana", "status": "complete", "status_date": "2026-06-15T02:12:19.608Z", "due_on": "2026-05-15", "modified_at": "2026-08-13T08:59:01.933Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 64, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "9. Konan First - Enhancement - ITSC 2026", "owner": "Djaka Santosa", "status": "complete", "status_date": "2026-08-14T00:27:23.274Z", "due_on": "2026-08-14", "modified_at": "2026-08-18T05:10:24.993Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Back Office", "days_since_update": 4, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "6. Antrean Online dan Dashboard kunjungan FKTP dan FKRTL - ITSC 2026", "owner": "Djaka Santosa", "status": "on_track", "status_date": "2026-08-03T02:33:30.694Z", "due_on": "2026-08-14", "modified_at": "2026-08-17T03:45:10.923Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 15, "overdue_days": 5, "is_stale": true, "is_overdue": true}, {"name": "Pengadaan SAN Director", "owner": "BagusK", "status": "complete", "status_date": "2026-06-24T03:14:12.833Z", "due_on": null, "modified_at": "2026-08-12T07:59:04.748Z", "jenis_ti": "Pengadaan TI", "sdlc": null, "cluster": null, "days_since_update": 55, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pengadaan Renewal Warranty dan Maintenance Product IBM", "owner": "Sahat M Piliang", "status": "on_hold", "status_date": "2026-06-15T03:44:33.277Z", "due_on": null, "modified_at": "2026-08-12T07:59:11.872Z", "jenis_ti": "Pengadaan TI", "sdlc": null, "cluster": null, "days_since_update": 64, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Interoperabilitas Data dalam Rangka  Mendukung Ujicoba Insentif Kapitasi Berbasis Kinerja (KBK)", "owner": "Arif Asridin", "status": "off_track", "status_date": "2026-08-08T04:40:58.194Z", "due_on": "2026-08-31", "modified_at": "2026-08-12T07:59:26.702Z", "jenis_ti": "Interoperabilitas Sistem dengan K/L", "sdlc": null, "cluster": null, "days_since_update": 10, "overdue_days": -12, "is_stale": true, "is_overdue": false}, {"name": "Integrasi Data Dukung Perhitungan National Health Account (NHA) (Penambahan Metode Integrasi)", "owner": "Arif Asridin", "status": "complete", "status_date": "2026-07-05T04:04:37.553Z", "due_on": "2026-08-31", "modified_at": "2026-08-12T07:59:29.734Z", "jenis_ti": "Interoperabilitas Sistem dengan K/L", "sdlc": null, "cluster": null, "days_since_update": 44, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Dashboard Monitoring Prolanis Muda", "owner": "Fatah Abdella Sutara", "status": "complete", "status_date": "2026-05-08T04:07:22.506Z", "due_on": "2026-05-31", "modified_at": "2026-08-12T09:29:43.617Z", "jenis_ti": "Dashboard", "sdlc": null, "cluster": null, "days_since_update": 102, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "RPA Update User Aplikasi Dataviz", "owner": "Arman A. Putra", "status": "on_track", "status_date": "2026-08-14T07:14:15.485Z", "due_on": "2026-09-25", "modified_at": "2026-08-14T07:14:03.914Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 4, "overdue_days": -37, "is_stale": true, "is_overdue": false}, {"name": "RPA Manajemen Perluasan dan Kepatuhan Kepesertaan (Aplikasi Sireta)", "owner": "Ikhlasul Amalia Rahmi", "status": "complete", "status_date": "2026-07-14T02:00:25.934Z", "due_on": "2026-10-31", "modified_at": "2026-08-12T08:03:52.104Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 35, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "RPA Otopia", "owner": "triasofa@gmail.com", "status": "on_track", "status_date": "2026-08-14T09:11:21.104Z", "due_on": "2026-08-14", "modified_at": "2026-08-14T09:10:10.056Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 4, "overdue_days": 5, "is_stale": true, "is_overdue": true}, {"name": "Pengembangan OCR Awasrik file f2a", "owner": "husnun.nashir@gmail.com", "status": "on_track", "status_date": "2026-08-14T07:15:56.369Z", "due_on": "2026-11-30", "modified_at": "2026-08-14T07:15:31.881Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 4, "overdue_days": -103, "is_stale": true, "is_overdue": false}, {"name": "Pengembangan OCR NIB", "owner": "Ikhlasul Amalia Rahmi", "status": "complete", "status_date": "2026-07-31T04:52:44.533Z", "due_on": "2026-08-28", "modified_at": "2026-08-12T08:03:59.315Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 18, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "10. Portal SCF dan SIF", "owner": "Wahyu Satriyo Wibowo", "status": "on_track", "status_date": "2026-08-18T03:54:18.269Z", "due_on": "2026-11-30", "modified_at": "2026-08-18T08:09:02.777Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Perencanaan", "cluster": "Keuangan/Iuran", "days_since_update": 0, "overdue_days": -103, "is_stale": false, "is_overdue": false}, {"name": "8. Akuntansi - PDP Liabilitas - ITSC 2026", "owner": "Wahyu Satriyo Wibowo", "status": "complete", "status_date": "2026-07-16T08:29:24.724Z", "due_on": "2026-06-30", "modified_at": "2026-08-12T07:58:31.198Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Rilis", "cluster": "Keuangan/Iuran", "days_since_update": 33, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "3. Penyesuaian Aplikasi Klaster Kepesertaan sesuai Ketentuan Surat Edaran Direktur Kepesertaan Badan Penyelenggara Jaminan Sosial Kesehatan Nomor 32 tahun 2025 dan Peraturan Direksi Badan Penyelenggara Jaminan Sosial Kesehatan Nomor 68 Tahun 2021 Tentang Pedoman Administrasi dan Manajemen Data Kepesertaan - ITSC2026", "owner": "Yanuar Milad", "status": "on_track", "status_date": "2026-08-13T06:25:12.137Z", "due_on": "2026-09-09", "modified_at": "2026-08-14T07:19:01.682Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Kepesertaan", "days_since_update": 5, "overdue_days": -21, "is_stale": true, "is_overdue": false}, {"name": "4. Pcare, Aplikasi Mobile JKN, Aplikasi WA Blast - ITSC 2026", "owner": "Mohamad Komarudin", "status": "on_track", "status_date": "2026-08-09T12:54:12.569Z", "due_on": "2026-08-24", "modified_at": "2026-08-17T08:20:02.708Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengujian", "cluster": "Pelayanan", "days_since_update": 9, "overdue_days": -5, "is_stale": true, "is_overdue": false}, {"name": "2. BU Prioritas - ITSC 2026", "owner": "Yanuar Milad", "status": "on_track", "status_date": "2026-08-13T06:25:41.397Z", "due_on": "2026-10-15", "modified_at": "2026-08-13T06:25:39.582Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Pengembangan", "cluster": "Kepesertaan", "days_since_update": 5, "overdue_days": -57, "is_stale": true, "is_overdue": false}, {"name": "1. Monev Yanser dan Aplikasi Mobile JKN (VIOLA)", "owner": "Djaka Santosa", "status": "on_hold", "status_date": "2026-05-25T06:38:46.289Z", "due_on": null, "modified_at": "2026-08-12T07:58:44.365Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": "Evaluasi UKPF", "cluster": "Kepesertaan", "days_since_update": 85, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "REAKTIVASI CEPAT - WEBSITE - MICROSITE PBI (QW 2026)", "owner": "Soni Maulana", "status": "complete", "status_date": "2026-05-04T05:57:28.756Z", "due_on": "2026-05-08", "modified_at": "2026-08-12T09:29:02.497Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 106, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "REAKTIVASI CEPAT - Kepesertaan- perubahan alur reaktivasi PBI JK (QW 2026)", "owner": "Yanuar Milad", "status": "complete", "status_date": "2026-05-05T02:11:57.123Z", "due_on": "2026-05-08", "modified_at": "2026-08-12T09:29:07.504Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 105, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Dashboard Untuk Memantau Jumlah Proses Reaktivasi", "owner": "Yogi Agra", "status": "complete", "status_date": "2026-06-30T06:43:02.576Z", "due_on": "2026-06-29", "modified_at": "2026-08-12T09:29:10.454Z", "jenis_ti": "Dashboard", "sdlc": null, "cluster": null, "days_since_update": 49, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Dashboard Monitoring Hasil Customer Visit", "owner": "Fatah Abdella Sutara", "status": "complete", "status_date": "2026-04-24T05:45:33.996Z", "due_on": "2026-05-31", "modified_at": "2026-08-12T09:29:14.156Z", "jenis_ti": "Dashboard", "sdlc": null, "cluster": null, "days_since_update": 116, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Dashboard Pemantauan Kesehatan Siswa Sekolah Rakyat", "owner": "Yogi Agra", "status": "complete", "status_date": "2026-06-03T00:56:30.466Z", "due_on": "2026-06-05", "modified_at": "2026-08-12T09:29:17.193Z", "jenis_ti": "Dashboard", "sdlc": null, "cluster": null, "days_since_update": 76, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Dashboard Pemantauan Tumbuh Kembang Anak Penerima MBG", "owner": "Arif Asridin", "status": "complete", "status_date": "2026-06-03T00:49:42.992Z", "due_on": "2026-06-30", "modified_at": "2026-08-12T09:29:20.432Z", "jenis_ti": "Dashboard", "sdlc": null, "cluster": null, "days_since_update": 76, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Dashboard Pemantauan Kesehatan Petugas SPPG", "owner": "Arif Asridin", "status": "complete", "status_date": "2026-06-03T00:46:23.200Z", "due_on": "2026-06-30", "modified_at": "2026-08-12T09:29:23.560Z", "jenis_ti": "Dashboard", "sdlc": null, "cluster": null, "days_since_update": 76, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Pcare MBG-Kepesertaan_ Script Migrasi (pengalihan segmen) SPPG", "owner": "Ulfah Nur", "status": "complete", "status_date": "2026-04-24T08:43:06.180Z", "due_on": "2026-04-30", "modified_at": "2026-08-12T09:29:26.299Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 116, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": " Uji coba Intelligent Claim Management", "owner": "Paul Donald", "status": "complete", "status_date": "2026-05-21T09:02:36.786Z", "due_on": "2026-05-22", "modified_at": "2026-08-12T09:29:29.456Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 89, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Personalisasi Notifikasi Mobile JKN oleh MDI", "owner": "Paul Donald", "status": "complete", "status_date": "2026-07-14T02:06:13.278Z", "due_on": "2026-06-30", "modified_at": "2026-08-12T09:29:32.357Z", "jenis_ti": "Project AI dan RPA", "sdlc": null, "cluster": null, "days_since_update": 35, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "BPJS Menyapa pada Mobile Sinkron", "owner": "Aries Kurniawan", "status": "complete", "status_date": "2026-04-13T09:40:49.899Z", "due_on": "2026-04-10", "modified_at": "2026-08-12T09:29:35.201Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 127, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "PROLANIS MUDA", "owner": "I Made Wahyu Wirawan", "status": "complete", "status_date": "2026-06-09T10:24:47.463Z", "due_on": "2026-05-20", "modified_at": "2026-08-12T09:29:38.431Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 70, "overdue_days": null, "is_stale": true, "is_overdue": false}, {"name": "Aplikasi Mobile JKN (Notifikasi)", "owner": "Muhammad Yazid Al Qahar", "status": "complete", "status_date": "2026-04-17T08:34:37.506Z", "due_on": "2026-05-01", "modified_at": "2026-08-12T09:29:05.378Z", "jenis_ti": "Pengembangan Sistem Informasi", "sdlc": null, "cluster": null, "days_since_update": 123, "overdue_days": null, "is_stale": true, "is_overdue": false}];
+const TODAY = new Date("2026-08-19T00:00:00Z");
+
+const STATUS_META = {
+  complete:  {label:"Complete",   badge:"badge-green"},
+  on_track:  {label:"On track",   badge:"badge-blue"},
+  on_hold:   {label:"On hold",    badge:"badge-amber"},
+  at_risk:   {label:"At risk",    badge:"badge-red"},
+  off_track: {label:"Off track",  badge:"badge-red"},
+  no_status: {label:"Tanpa status", badge:"badge-gray"}
+};
+
+function fmtDate(iso){
+  if(!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"});
+}
+function esc(s){
+  if(s===null||s===undefined) return "";
+  return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+// populate filter dropdowns
+const jenisSet = [...new Set(RAW_DATA.map(d=>d.jenis_ti))].sort();
+const ownerSet = [...new Set(RAW_DATA.map(d=>d.owner))].sort((a,b)=>a.localeCompare(b));
+const selJenis = document.getElementById("filter-jenis");
+const selOwner = document.getElementById("filter-owner");
+jenisSet.forEach(j=>{ const o=document.createElement("option"); o.value=j; o.textContent=j; selJenis.appendChild(o); });
+ownerSet.forEach(o_=>{ const o=document.createElement("option"); o.value=o_; o.textContent=o_; selOwner.appendChild(o); });
+
+document.getElementById("gen-date").textContent = TODAY.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+document.getElementById("footer-gen").textContent = "Dashboard dibuat " + TODAY.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+
+let chartJenis=null, chartStatus=null;
+
+function getFiltered(){
+  const jenis = selJenis.value;
+  const owner = selOwner.value;
+  const q = document.getElementById("filter-search").value.trim().toLowerCase();
+  return RAW_DATA.filter(d=>{
+    if(jenis && d.jenis_ti!==jenis) return false;
+    if(owner && d.owner!==owner) return false;
+    if(q && !d.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render(){
+  const data = getFiltered();
+  document.getElementById("filter-count").textContent = data.length + " dari " + RAW_DATA.length + " proyek ditampilkan";
+
+  const total = data.length;
+  const complete = data.filter(d=>d.status==="complete").length;
+  const ontrack = data.filter(d=>d.status==="on_track").length;
+  const risk = data.filter(d=>d.status==="at_risk"||d.status==="off_track").length;
+  const hold = data.filter(d=>d.status==="on_hold").length;
+
+  document.getElementById("kpi-total").textContent = total;
+  document.getElementById("kpi-complete").textContent = complete;
+  document.getElementById("kpi-ontrack").textContent = ontrack;
+  document.getElementById("kpi-risk").textContent = risk;
+  document.getElementById("kpi-hold").textContent = hold;
+
+  const pct = (n)=> total? Math.round(n/total*100) : 0;
+  document.getElementById("kpi-complete-pct").textContent = pct(complete)+"% dari total";
+  document.getElementById("kpi-ontrack-pct").textContent = pct(ontrack)+"% dari total";
+  document.getElementById("kpi-risk-pct").textContent = pct(risk)+"% dari total";
+  document.getElementById("kpi-hold-pct").textContent = pct(hold)+"% dari total";
+  document.getElementById("kpi-complete-bar").style.width = pct(complete)+"%";
+  document.getElementById("kpi-ontrack-bar").style.width = pct(ontrack)+"%";
+  document.getElementById("kpi-risk-bar").style.width = pct(risk)+"%";
+  document.getElementById("kpi-hold-bar").style.width = pct(hold)+"%";
+
+  renderCharts(data);
+  renderOwnerTable(data);
+  renderAlerts(data);
+  renderFullTable(data);
+}
+
+function renderCharts(data){
+  const jenisList = [...new Set(data.map(d=>d.jenis_ti))].sort();
+  const statuses = ["complete","on_track","on_hold","at_risk","off_track"];
+  const colors = {complete:"#1a9e6a", on_track:"#2a6fdb", on_hold:"#c98500", at_risk:"#d13b3b", off_track:"#8b3a3a"};
+  const datasets = statuses.map(s=>({
+    label: STATUS_META[s].label,
+    data: jenisList.map(j=> data.filter(d=>d.jenis_ti===j && d.status===s).length),
+    backgroundColor: colors[s]
+  }));
+
+  if(chartJenis) chartJenis.destroy();
+  chartJenis = new Chart(document.getElementById("chartJenis"), {
+    type:"bar",
+    data:{ labels: jenisList, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{ x:{stacked:true, ticks:{font:{size:11}}}, y:{stacked:true, beginAtZero:true, ticks:{precision:0}} },
+      plugins:{ legend:{display:false} }
+    }
+  });
+
+  const statusCounts = statuses.map(s=> data.filter(d=>d.status===s).length);
+  if(chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById("chartStatus"), {
+    type:"doughnut",
+    data:{ labels: statuses.map(s=>STATUS_META[s].label), datasets:[{ data: statusCounts, backgroundColor: statuses.map(s=>colors[s]), borderWidth:2, borderColor:"#fff" }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:"bottom", labels:{boxWidth:10, font:{size:11}}} } }
+  });
+
+  const legendHtml = statuses.map(s=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:11.5px;color:var(--text-sub);"><span style="width:9px;height:9px;border-radius:2px;background:${colors[s]};display:inline-block;"></span>${STATUS_META[s].label}</span>`).join("");
+}
+
+function renderOwnerTable(data){
+  const onTrack = data.filter(d=>d.status==="on_track");
+  const byOwner = {};
+  onTrack.forEach(d=>{
+    if(!byOwner[d.owner]) byOwner[d.owner] = {owner:d.owner, total:0, ok:0, stale:0};
+    byOwner[d.owner].total++;
+    if(d.is_stale) byOwner[d.owner].stale++; else byOwner[d.owner].ok++;
+  });
+  let rows = Object.values(byOwner).sort((a,b)=> b.total-a.total || a.owner.localeCompare(b.owner));
+  document.getElementById("owner-recap-count").textContent = rows.length + " PIC";
+  const tbody = document.getElementById("owner-table-body");
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Tidak ada proyek on track untuk filter ini.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r=>{
+    const okPct = r.total? Math.round(r.ok/r.total*100) : 0;
+    return `<tr>
+      <td><strong>${esc(r.owner)}</strong></td>
+      <td>${r.total}</td>
+      <td><span class="badge badge-green">${r.ok}</span></td>
+      <td>${r.stale>0 ? `<span class="badge badge-red">${r.stale}</span>` : `<span class="badge badge-gray">0</span>`}</td>
+      <td><div class="stack-bar"><div class="stack-seg-ok" style="width:${okPct}%"></div><div class="stack-seg-stale" style="width:${100-okPct}%"></div></div></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderAlerts(data){
+  const risk = data.filter(d=>d.status==="at_risk"||d.status==="off_track").sort((a,b)=>(b.overdue_days||-999)-(a.overdue_days||-999));
+  const hold = data.filter(d=>d.status==="on_hold").sort((a,b)=> b.days_since_update-a.days_since_update);
+  const stale = data.filter(d=>d.status==="on_track" && d.is_stale).sort((a,b)=> b.days_since_update-a.days_since_update);
+  const overdue = data.filter(d=>d.is_overdue).sort((a,b)=> b.overdue_days-a.overdue_days);
+
+  document.getElementById("list-risk").innerHTML = risk.length ? risk.map(d=>`
+    <div style="padding:9px 0;border-bottom:1px solid #f0f2f5;">
+      <div class="name-main">${esc(d.name)}</div>
+      <div class="name-sub">${esc(d.owner)} &bull; ${STATUS_META[d.status].label} &bull; tenggat ${fmtDate(d.due_on)}${d.overdue_days>0?` &bull; <span style="color:var(--red);font-weight:600;">terlambat ${d.overdue_days} hari</span>`:""}</div>
+    </div>`).join("") : `<div class="empty-state">Tidak ada proyek at risk / off track.</div>`;
+
+  document.getElementById("list-hold").innerHTML = hold.length ? hold.map(d=>`
+    <div style="padding:9px 0;border-bottom:1px solid #f0f2f5;">
+      <div class="name-main">${esc(d.name)}</div>
+      <div class="name-sub">${esc(d.owner)} &bull; sejak ${fmtDate(d.status_date)} (${d.days_since_update} hari lalu) &bull; tenggat ${fmtDate(d.due_on)}</div>
+    </div>`).join("") : `<div class="empty-state">Tidak ada proyek on hold.</div>`;
+
+  document.getElementById("list-stale").innerHTML = stale.length ? stale.map(d=>`
+    <div style="padding:9px 0;border-bottom:1px solid #f0f2f5;">
+      <div class="name-main">${esc(d.name)}</div>
+      <div class="name-sub">${esc(d.owner)} &bull; update terakhir ${fmtDate(d.status_date)} &bull; <span style="color:var(--red);font-weight:600;">${d.days_since_update} hari lalu</span></div>
+    </div>`).join("") : `<div class="empty-state">Semua proyek on track sudah update dalam 3 hari terakhir.</div>`;
+
+  document.getElementById("list-overdue").innerHTML = overdue.length ? overdue.map(d=>`
+    <div style="padding:9px 0;border-bottom:1px solid #f0f2f5;">
+      <div class="name-main">${esc(d.name)}</div>
+      <div class="name-sub">${esc(d.owner)} &bull; ${STATUS_META[d.status].label} &bull; tenggat ${fmtDate(d.due_on)} &bull; <span style="color:var(--purple);font-weight:600;">terlambat ${d.overdue_days} hari</span></div>
+    </div>`).join("") : `<div class="empty-state">Tidak ada proyek yang melewati tenggat.</div>`;
+}
+
+let fullSortKey = "days_since_update", fullSortDir = 1;
+function renderFullTable(data){
+  document.getElementById("full-table-count").textContent = data.length + " proyek";
+  let rows = [...data];
+  rows.sort((a,b)=>{
+    let av=a[fullSortKey], bv=b[fullSortKey];
+    if(av===null||av===undefined) av = -Infinity;
+    if(bv===null||bv===undefined) bv = -Infinity;
+    if(typeof av === "string") return fullSortDir*av.localeCompare(bv);
+    return fullSortDir*((av>bv)?1:(av<bv?-1:0));
+  });
+  const tbody = document.getElementById("full-table-body");
+  if(rows.length===0){
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">Tidak ada proyek yang cocok dengan filter.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(d=>{
+    const meta = STATUS_META[d.status] || STATUS_META.no_status;
+    const overdueTag = d.is_overdue ? ` <span class="badge badge-purple" style="margin-left:4px;">telat ${d.overdue_days}h</span>` : "";
+    const updTag = d.is_stale ? `<span style="color:var(--red);font-weight:600;">${d.days_since_update} hari lalu</span>` : `${d.days_since_update!==null?d.days_since_update+" hari lalu":"-"}`;
+    return `<tr>
+      <td class="name-cell"><div class="name-main">${esc(d.name)}</div></td>
+      <td>${esc(d.jenis_ti)}</td>
+      <td>${esc(d.owner)}</td>
+      <td><span class="badge ${meta.badge}">${meta.label}</span></td>
+      <td>${fmtDate(d.due_on)}${overdueTag}</td>
+      <td>${updTag}</td>
+    </tr>`;
+  }).join("");
+}
+
+document.querySelectorAll("#full-table thead th[data-key]").forEach(th=>{
+  th.addEventListener("click", ()=>{
+    const key = th.getAttribute("data-key");
+    if(fullSortKey===key) fullSortDir*=-1; else { fullSortKey=key; fullSortDir=1; }
+    renderFullTable(getFiltered());
+  });
+});
+
+selJenis.addEventListener("change", render);
+selOwner.addEventListener("change", render);
+document.getElementById("filter-search").addEventListener("input", render);
+document.getElementById("btn-reset").addEventListener("click", ()=>{
+  selJenis.value=""; selOwner.value=""; document.getElementById("filter-search").value="";
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
