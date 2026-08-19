@@ -99,10 +99,10 @@
   .alert-panel h3{font-size:14.5px;margin:0 0 4px;font-weight:700;display:flex;align-items:center;gap:8px;}
   .alert-panel p.desc{font-size:12.5px;color:var(--text-muted);margin:0 0 12px;}
   .empty-state{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
-  .scroll-box{max-height:320px;overflow-y:auto;}
+  .scroll-box{max-height:320px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 
   .full-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:8px;}
-  .full-table-scroll{max-height:560px;overflow-y:auto;}
+  .full-table-scroll{max-height:560px;overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .full-table-scroll thead th{position:sticky;top:0;background:#fff;z-index:2;}
 
   footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text-muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -121,6 +121,62 @@
   }
   @media (max-width:680px){
     .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:16px 14px 40px;}
+    header.top{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:18px;}
+    header.top h1{font-size:20px;}
+    header.top p{font-size:12.5px;}
+    .refresh-badge{font-size:12px;padding:7px 12px;}
+
+    .filters{flex-direction:column;align-items:stretch;padding:14px;gap:12px;margin-bottom:16px;}
+    .filter-group{min-width:0;width:100%;}
+    .filter-group select, .filter-group input{width:100%;min-width:0;padding:11px 12px;font-size:16px;}
+    .btn-reset{width:100%;padding:11px 18px;}
+    .filter-count{margin-left:0;order:99;text-align:center;}
+
+    .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+    .kpi-card{padding:14px;}
+    .kpi-card .label{font-size:11.5px;margin-bottom:6px;}
+    .kpi-card .value{font-size:24px;}
+    .kpi-card .sub{font-size:10.5px;}
+
+    .progress-panel{padding:18px 16px;gap:16px;margin-bottom:16px;}
+    .progress-ring-wrap{width:130px;height:130px;}
+    .progress-ring-wrap svg{width:130px;height:130px;}
+    .progress-ring-text .pct{font-size:24px;}
+    .progress-detail h2{font-size:14.5px;}
+    .progress-stats{gap:16px 22px;margin-bottom:12px;}
+    .progress-stats .stat .num{font-size:18px;}
+
+    .panel{padding:14px;}
+    .panel h2{font-size:14.5px;}
+
+    .section-title{font-size:16px;margin:24px 0 10px;}
+    .section-title .tag{font-size:11px;}
+
+    table{font-size:12.5px;}
+    th{font-size:10.5px;padding:7px 8px;}
+    td{padding:7px 8px;}
+    #owner-table{min-width:520px;}
+    #full-table{min-width:640px;}
+    .name-cell{max-width:220px;}
+
+    .alert-panel h3{font-size:13.5px;}
+    .alert-panel p.desc{font-size:11.5px;}
+    .scroll-box{max-height:260px;}
+
+    .full-table-wrap{padding:14px;}
+    .chart-box{height:220px !important;}
+
+    footer{flex-direction:column;align-items:flex-start;gap:6px;margin-top:28px;}
+  }
+
+  @media (max-width:400px){
+    .kpi-grid{grid-template-columns:1fr 1fr;}
+    .kpi-card .value{font-size:21px;}
+    .progress-stats{gap:14px 18px;}
   }
 </style>
 </head>
@@ -220,13 +276,13 @@
   <div class="grid-2">
     <div class="panel">
       <h2>Distribusi proyek per jenis pengembangan TI<span class="count-badge">berdasarkan status</span></h2>
-      <div style="position:relative;height:280px;">
+      <div class="chart-box" style="position:relative;height:280px;">
         <canvas id="chartJenis" role="img" aria-label="Bar chart jumlah proyek per jenis pengembangan TI, dipecah per status">Grafik jumlah proyek per jenis pengembangan TI.</canvas>
       </div>
     </div>
     <div class="panel">
       <h2>Komposisi status proyek</h2>
-      <div style="position:relative;height:280px;">
+      <div class="chart-box" style="position:relative;height:280px;">
         <canvas id="chartStatus" role="img" aria-label="Donut chart komposisi status proyek: complete, on track, at risk, off track, on hold">Grafik komposisi status proyek.</canvas>
       </div>
     </div>
